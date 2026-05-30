@@ -15,6 +15,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
+      },
+      // Mengarahkan folder statis gambar local
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
       }
     }
   }

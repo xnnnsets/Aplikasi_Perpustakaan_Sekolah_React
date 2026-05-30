@@ -45,11 +45,20 @@ export default function AdminBooks() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Otomatis convert link Google Drive jadi direct image link
+      let finalCoverImage = formData.coverImage;
+      const gdriveMatch = finalCoverImage?.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+      if (gdriveMatch) {
+        finalCoverImage = `https://drive.google.com/uc?export=view&id=${gdriveMatch[1]}`;
+      }
+      
+      const payload = { ...formData, coverImage: finalCoverImage };
+
       if (editId) {
-        await api.put(`/books/${editId}`, formData);
+        await api.put(`/books/${editId}`, payload);
         toast.success('Buku berhasil diubah!');
       } else {
-        await api.post('/books', formData);
+        await api.post('/books', payload);
         toast.success('Buku berhasil ditambahkan!');
       }
       setFormData({ title: '', author: '', stock: '', coverImage: '' });
