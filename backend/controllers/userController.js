@@ -13,3 +13,15 @@ export const payFine = async (req, res) => {
   await user.save();
   res.json({ message: 'Denda berhasil dibayar.', user });
 };
+
+export const toggleSanksi = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Murid tidak ditemukan.' });
+    user.statusPeminjaman = user.statusPeminjaman === 'aktif' ? 'disanksi' : 'aktif';
+    await user.save();
+    res.json({ message: `Status murid diubah menjadi "${user.statusPeminjaman}".`, user });
+  } catch (err) {
+    res.status(400).json({ message: 'Gagal mengubah status.' });
+  }
+};

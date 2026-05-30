@@ -1,18 +1,52 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Search, BookOpen, ShoppingBag } from 'lucide-react';
+import { Search, BookOpen, ShieldAlert, Calendar, X, Phone } from 'lucide-react';
 import api from '../services/api';
 
 export default function MuridDashboard() {
   const [books, setBooks] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState(null);
+  const [isSanksi, setIsSanksi] = useState(false);
+  const [pesanSanksi, setPesanSanksi] = useState('');
+
+  // Booking modal state
+  const [bookingModal, setBookingModal] = useState(null);
+  const [tanggalAmbil, setTanggalAmbil] = useState('');
+  const [tanggalKembali, setTanggalKembali] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     if (!user) return;
+    checkStatus();
     fetchBooks();
+    fetchSettings();
   }, []);
+
+  const checkStatus = async () => {
+    try {
+      const res = await api.get('/users');
+      const me = res.data.find(u => u._id === user._id);
+      if (me && me.statusPeminjaman === 'disanksi') {
+        setIsSanksi(true);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const { data } = await api.get('/settings');
+      setSettings(data);
+      if (data.pesanSanksi) setPesanSanksi(data.pesanSanksi);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -25,23 +59,137 @@ export default function MuridDashboard() {
     setLoading(false);
   };
 
-  const handleBooking = async (bookId) => {
-    if (!window.confirm('Ingin Booking buku ini? (Ambil fisik maksimal hari ini)')) return;
+  const openBookingModal = (book) => {
+    const today = new Date().toISOString().split('T')[0];
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 7);
+    setTanggalAmbil(today);
+    setTanggalKembali(maxDate.toISOString().split('T')[0]);
+    setBookingModal(book);
+  };
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
     try {
-      await api.post('/transactions/book', { userId: user._id, bookId });
-      toast.success('Pemesanan buku berhasil, silakan ambil di meja petugas');
+      await api.post('/transactions/book', {
+        userId: user._id,
+        bookId: bookingModal._id,
+        tanggalAmbil,
+        tanggalKembali
+      });
+      toast.success('Pemesanan berhasil! Silakan ambil di meja petugas.');
+      setBookingModal(null);
       fetchBooks();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Gagal booking');
+      const msg = err.response?.data?.message || 'Gagal booking';
+      if (err.response?.data?.disanksi) {
+        setIsSanksi(true);
+        setBookingModal(null);
+      }
+      toast.error(msg);
     }
+    setSubmitting(false);
   };
 
   if (!user) return <div className="text-center p-4">Silakan Login Terlebih Dahulu.</div>;
 
   const filteredBooks = books.filter(b => b.title.toLowerCase().includes(search.toLowerCase()));
+  const todayStr = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in relative">
+      {/* FLOATING MODAL SANKSI */}
+      {isSanksi && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-scale-in">
+            <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-4">
+              <ShieldAlert size={32} className="text-rose-600" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800 mb-2">Akun Disanksi</h2>
+            <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+              {pesanSanksi || 'Akun Anda sedang dalam sanksi. Silakan hubungi petugas perpustakaan untuk informasi lebih lanjut.'}
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-indigo-600 bg-indigo-50 rounded-xl px-4 py-3">
+              <Phone size={16} />
+              <span className="font-medium">Hubungi Petugas Perpustakaan</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BOOKING MODAL */}
+      {bookingModal && (
+        <div className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setBookingModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <Calendar size={16} className="text-emerald-600" />
+                </div>
+                <h3 className="font-semibold text-slate-800 text-sm">Pilih Tanggal Peminjaman</h3>
+              </div>
+              <button onClick={() => setBookingModal(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleBooking} className="p-5 space-y-4">
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <p className="text-xs text-slate-400">Buku yang dipilih</p>
+                <p className="font-semibold text-sm text-slate-800 mt-0.5">{bookingModal.title}</p>
+                <p className="text-xs text-slate-400">{bookingModal.author || 'Penulis tidak diketahui'}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Tanggal Ambil</label>
+                  <input
+                    type="date"
+                    required
+                    min={todayStr}
+                    className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    value={tanggalAmbil}
+                    onChange={e => setTanggalAmbil(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Tanggal Kembali</label>
+                  <input
+                    type="date"
+                    required
+                    min={tanggalAmbil || todayStr}
+                    className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                    value={tanggalKembali}
+                    onChange={e => setTanggalKembali(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-400">Durasi peminjaman maksimal 7 hari. Buku yang melewati batas waktu akan dikenakan denda.</p>
+
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white py-2.5 rounded-xl text-sm font-medium hover:from-emerald-700 hover:to-emerald-600 transition-all shadow-sm disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Memproses...
+                    </>
+                  ) : 'Konfirmasi Booking'}
+                </button>
+                <button type="button" onClick={() => setBookingModal(null)} className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-200 transition-colors">
+                  Batal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Header with search */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
@@ -49,10 +197,12 @@ export default function MuridDashboard() {
             <h2 className="text-xl font-bold text-slate-800">Katalog Buku</h2>
             <p className="text-sm text-slate-400 mt-0.5">Cari dan pesan buku yang tersedia</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-400 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
-            <ShoppingBag size={14} className="text-amber-500" />
-            <span className="text-amber-700">Wajib ambil fisik hari ini</span>
-          </div>
+          {settings && (
+            <div className="flex items-center gap-2 text-xs bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200">
+              <Calendar size={14} className="text-indigo-500" />
+              <span className="text-indigo-700">Buka: {settings.jamBuka} - {settings.jamTutup}</span>
+            </div>
+          )}
         </div>
 
         <div className="relative">
@@ -111,7 +261,7 @@ export default function MuridDashboard() {
                     Stok: {book.stock}
                   </span>
                   <button
-                    onClick={() => handleBooking(book._id)}
+                    onClick={() => openBookingModal(book)}
                     disabled={book.stock <= 0}
                     className={`text-xs px-4 py-2 rounded-xl font-medium transition-all ${
                       book.stock > 0

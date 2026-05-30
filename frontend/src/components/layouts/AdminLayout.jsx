@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Book, Users, History, LogOut, Menu, X, BookOpen } from 'lucide-react';
+import { Home, Book, Users, History, LogOut, Menu, X, BookOpen, Settings, ArrowRightLeft, Wallet } from 'lucide-react';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -15,9 +15,12 @@ export default function AdminLayout() {
 
   const navs = [
     { name: 'Sirkulasi', path: '/admin', icon: <Home size={18} /> },
+    { name: 'Walk-In', path: '/admin/walk-in', icon: <ArrowRightLeft size={18} /> },
+    { name: 'Pembayaran Denda', path: '/admin/fines', icon: <Wallet size={18} /> },
     { name: 'Data Buku', path: '/admin/books', icon: <Book size={18} /> },
     { name: 'Data Murid', path: '/admin/users', icon: <Users size={18} /> },
     { name: 'Riwayat', path: '/admin/history', icon: <History size={18} /> },
+    { name: 'Pengaturan', path: '/admin/settings', icon: <Settings size={18} /> },
   ];
 
   const isActive = (path) => location.pathname === path;

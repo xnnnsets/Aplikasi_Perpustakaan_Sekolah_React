@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Pencil, Trash2, X, Users, UserPlus } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Users, UserPlus, ShieldAlert, ShieldCheck } from 'lucide-react';
 import api from '../services/api';
 
 export default function AdminUsers() {
@@ -61,6 +61,18 @@ export default function AdminUsers() {
   const cancelEdit = () => {
     setEditId(null);
     setFormData({ nis: '', name: '', password: '' });
+  };
+
+  const handleToggleSanksi = async (user) => {
+    const action = user.statusPeminjaman === 'aktif' ? 'memberi sanksi' : 'mencabut sanksi';
+    if (!window.confirm(`Yakin ingin ${action} murid ${user.name}?`)) return;
+    try {
+      const res = await api.put(`/users/${user._id}/toggle-sanksi`);
+      toast.success(res.data.message);
+      fetchUsers();
+    } catch (err) {
+      toast.error('Gagal mengubah status.');
+    }
   };
 
   return (
@@ -132,7 +144,8 @@ export default function AdminUsers() {
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">NIS</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Nama</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Password</th>
-                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Denda Aktif</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Denda</th>
                   <th className="text-right px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
@@ -144,7 +157,7 @@ export default function AdminUsers() {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${u.statusPeminjaman === 'disanksi' ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'}`}>
                           {u.name.charAt(0).toUpperCase()}
                         </div>
                         <span className="font-medium text-slate-700">{u.name}</span>
@@ -152,12 +165,33 @@ export default function AdminUsers() {
                     </td>
                     <td className="px-5 py-3 text-slate-400 text-xs">{u.password}</td>
                     <td className="px-5 py-3">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        u.statusPeminjaman === 'disanksi'
+                          ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'
+                          : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                      }`}>
+                        {u.statusPeminjaman === 'disanksi' ? <ShieldAlert size={12} /> : <ShieldCheck size={12} />}
+                        {u.statusPeminjaman === 'disanksi' ? 'Disanksi' : 'Aktif'}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
                       <span className={`text-xs font-semibold px-2 py-1 rounded-md ${u.dendaAktif > 0 ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
                         Rp {u.dendaAktif || 0}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleToggleSanksi(u)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            u.statusPeminjaman === 'disanksi'
+                              ? 'hover:bg-emerald-50 text-emerald-500'
+                              : 'hover:bg-rose-50 text-rose-400'
+                          }`}
+                          title={u.statusPeminjaman === 'disanksi' ? 'Cabut Sanksi' : 'Beri Sanksi'}
+                        >
+                          {u.statusPeminjaman === 'disanksi' ? <ShieldCheck size={14} /> : <ShieldAlert size={14} />}
+                        </button>
                         <button onClick={() => handleEdit(u)} className="p-2 rounded-lg hover:bg-amber-50 text-amber-500 transition-colors" title="Edit">
                           <Pencil size={14} />
                         </button>
@@ -170,7 +204,7 @@ export default function AdminUsers() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="px-5 py-12 text-center text-slate-400 text-sm">Belum ada murid terdaftar.</td>
+                    <td colSpan="6" className="px-5 py-12 text-center text-slate-400 text-sm">Belum ada murid terdaftar.</td>
                   </tr>
                 )}
               </tbody>

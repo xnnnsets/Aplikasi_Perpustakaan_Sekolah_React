@@ -9,10 +9,12 @@ import authRoutes from './routes/authRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
+import settingRoutes from './routes/settingRoutes.js';
 
 import User from './models/User.js';
 import Book from './models/Book.js';
 import Transaction from './models/Transaction.js';
+import Setting from './models/Setting.js';
 
 dotenv.config();
 connectDB();
@@ -45,6 +47,7 @@ app.use('/api', authRoutes); // /api/login
 app.use('/api/books', bookRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/settings', settingRoutes);
 
 // Endpoint untuk mengubah username (NIS) dan password Admin
 app.put('/api/admin/update-profile', async (req, res) => {
@@ -86,16 +89,17 @@ app.put('/api/admin/update-profile', async (req, res) => {
 
 // Seeder default Endpoint
 app.post('/api/seed', async (req, res) => {
-  await User.deleteMany({}); await Book.deleteMany({}); await Transaction.deleteMany({});
+  await User.deleteMany({}); await Book.deleteMany({}); await Transaction.deleteMany({}); await Setting.deleteMany({});
   await User.create([
-    { nis: '1001', name: 'Budi Santoso', password: 'password', role: 'murid' },
-    { nis: '1002', name: 'Ani Yudhoyono', password: 'password', role: 'murid' },
+    { nis: '1001', name: 'Budi Santoso', password: 'password', role: 'murid', statusPeminjaman: 'aktif' },
+    { nis: '1002', name: 'Ani Yudhoyono', password: 'password', role: 'murid', statusPeminjaman: 'aktif' },
     { nis: 'admin', name: 'Pustakawan', password: 'admin', role: 'admin' }
   ]);
   await Book.create([
     { title: 'Matematika Dasar SMA', author: 'Anton', stock: 5, coverImage: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&q=80' },
     { title: 'Buku Fiksi: Laskar Pelangi', author: 'Andrea Hirata', stock: 1, coverImage: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=300&q=80' }
   ]);
+  await Setting.create({});
   res.json({ message: 'Seeding berhasil!'});
 });
 

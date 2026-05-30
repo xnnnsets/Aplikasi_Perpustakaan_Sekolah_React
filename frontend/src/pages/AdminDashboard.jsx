@@ -1,17 +1,11 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Clock, ArrowRightLeft, RotateCcw, Wallet, Settings, CheckCircle2, UserSearch, BookCopy } from 'lucide-react';
+import { Clock, RotateCcw, CheckCircle2, BookCopy, Settings, ArrowRightLeft } from 'lucide-react';
 import api from '../services/api';
 
 export default function AdminDashboard() {
   const [pendings, setPendings] = useState([]);
   const [actives, setActives] = useState([]);
-
-  const [walkinNis, setWalkinNis] = useState('');
-  const [walkinBookId, setWalkinBookId] = useState('');
-
-  const [fineNis, setFineNis] = useState('');
-  const [fineAmount, setFineAmount] = useState('');
 
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
   const currentAdminNis = userData.nis || 'admin';
@@ -46,31 +40,11 @@ export default function AdminDashboard() {
     } catch (err) { toast.error(err.response?.data?.message || 'Error'); }
   };
 
-  const handleWalkIn = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post('/transactions/walk-in', { nis: walkinNis, titleOrId: walkinBookId });
-      toast.success('Sirkulasi Walk-In Berhasil!');
-      fetchActives();
-      setWalkinNis(''); setWalkinBookId('');
-    } catch (err) { toast.error(err.response?.data?.message || 'Error'); }
-  };
-
   const handleReturn = async (id) => {
     if (!window.confirm('Verifikasi fisik buku bagus? Konfirmasi pengembalian.')) return;
     try {
       const res = await api.post('/transactions/return', { transactionId: id });
       toast.success(res.data.message);
-      fetchActives();
-    } catch (err) { toast.error(err.response?.data?.message || 'Error'); }
-  };
-
-  const handlePayFine = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/users/pay-fine', { nis: fineNis, amount: Number(fineAmount) });
-      toast.success(`Denda dilunasi. Sisa Denda: Rp${res.data.user.dendaAktif}`);
-      setFineNis(''); setFineAmount('');
       fetchActives();
     } catch (err) { toast.error(err.response?.data?.message || 'Error'); }
   };
@@ -105,17 +79,17 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* PANEL 1: PENDING BOOKINGS */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden lg:col-span-2">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
               <Clock size={16} className="text-amber-600" />
             </div>
             <div>
-              <h2 className="font-semibold text-slate-800 text-sm">Konfirmasi Booking</h2>
-              <p className="text-[11px] text-slate-400">Jalur A: Pemesanan via Web</p>
+              <h2 className="font-semibold text-slate-800 text-sm">Konfirmasi Booking Web</h2>
+              <p className="text-[11px] text-slate-400">Setujui booking dari murid yang memesan via web</p>
             </div>
           </div>
-          <div className="p-4 space-y-3 max-h-[300px] overflow-y-auto">
+          <div className="p-4 space-y-3 max-h-[350px] overflow-y-auto">
             {pendings.length === 0 ? (
               <div className="text-center py-8">
                 <CheckCircle2 size={32} className="mx-auto text-slate-300 mb-2" />
@@ -135,39 +109,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* PANEL 2: WALK-IN */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-              <ArrowRightLeft size={16} className="text-indigo-600" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-slate-800 text-sm">Peminjaman Walk-In</h2>
-              <p className="text-[11px] text-slate-400">Jalur B: Langsung di perpustakaan</p>
-            </div>
-          </div>
-          <form onSubmit={handleWalkIn} className="p-5 space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Scan NIS Murid</label>
-              <div className="relative">
-                <UserSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type="text" className="w-full border border-slate-200 pl-9 pr-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" value={walkinNis} onChange={e => setWalkinNis(e.target.value)} required placeholder="Contoh: 1001" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Scan ID / Judul Buku</label>
-              <div className="relative">
-                <BookCopy size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type="text" className="w-full border border-slate-200 pl-9 pr-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" value={walkinBookId} onChange={e => setWalkinBookId(e.target.value)} required placeholder="Judul atau ID buku" />
-              </div>
-            </div>
-            <button className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-indigo-600 transition-all shadow-sm">
-              Pinjamkan Buku
-            </button>
-          </form>
-        </div>
-
-        {/* PANEL 3: PENGEMBALIAN */}
+        {/* PANEL 2: PENGEMBALIAN */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden lg:col-span-2">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center">
@@ -219,33 +161,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* PANEL 4: PEMBAYARAN DENDA */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden lg:col-span-2">
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <Wallet size={16} className="text-emerald-600" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-slate-800 text-sm">Pembayaran Denda</h2>
-              <p className="text-[11px] text-slate-400">Kasir: Lunasi denda murid</p>
-            </div>
-          </div>
-          <form onSubmit={handlePayFine} className="p-5 flex flex-col md:flex-row gap-4 items-end">
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">NIS Murid</label>
-              <input type="text" className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" value={fineNis} onChange={e => setFineNis(e.target.value)} required placeholder="Masukkan NIS" />
-            </div>
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-medium text-slate-500 mb-1.5">Nominal Bayar (Rp)</label>
-              <input type="number" className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all" value={fineAmount} onChange={e => setFineAmount(e.target.value)} required placeholder="0" />
-            </div>
-            <button className="shrink-0 bg-emerald-600 text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm w-full md:w-auto">
-              Bayar Lunas
-            </button>
-          </form>
-        </div>
-
-        {/* PANEL 5: PENGATURAN AKUN */}
+        {/* PANEL 3: PENGATURAN AKUN */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden lg:col-span-2">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">

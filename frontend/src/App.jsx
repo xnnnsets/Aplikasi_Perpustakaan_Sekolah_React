@@ -9,6 +9,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminBooks from './pages/AdminBooks';
 import AdminUsers from './pages/AdminUsers';
 import AdminHistory from './pages/AdminHistory';
+import AdminSettings from './pages/AdminSettings';
+import AdminWalkIn from './pages/AdminWalkIn';
+import AdminFines from './pages/AdminFines';
 
 // Murid Pages
 import MuridLayout from './components/layouts/MuridLayout';
@@ -27,9 +30,12 @@ function App() {
         {/* Admin Rounting */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route path="walk-in" element={<AdminWalkIn />} />
+          <Route path="fines" element={<AdminFines />} />
           <Route path="books" element={<AdminBooks />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="history" element={<AdminHistory />} />
+          <Route path="settings" element={<AdminSettings />} />
         </Route>
 
         {/* Murid Routing */}
