@@ -46,6 +46,44 @@ app.use('/api/books', bookRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 
+// Endpoint untuk mengubah username (NIS) dan password Admin
+app.put('/api/admin/update-profile', async (req, res) => {
+  const { currentNis, newNis, newPassword } = req.body;
+
+  try {
+    // Cari user berdasarkan NIS admin yang sedang aktif
+    const admin = await User.findOne({ nis: currentNis });
+
+    if (!admin) {
+      return res.status(404).json({ message: "Akun admin tidak ditemukan." });
+    }
+
+    // Validasi jika username/NIS baru ternyata sudah dipakai oleh murid atau admin lain
+    if (newNis && newNis !== currentNis) {
+      const existingUser = await User.findOne({ nis: newNis });
+      if (existingUser) {
+        return res.status(400).json({ message: "Username/NIS baru sudah digunakan oleh akun lain." });
+      }
+      admin.nis = newNis;
+    }
+
+    // Update password jika kolom diisi di frontend
+    if (newPassword) {
+      admin.password = newPassword; // Masih plain text sesuai arsitektur PoC awal kamu
+    }
+
+    await admin.save();
+
+    res.json({ 
+      success: true, 
+      message: "Profil admin berhasil diperbarui! Silakan login kembali dengan akun baru." 
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: "Terjadi kesalahan server.", error: error.message });
+  }
+});
+
 // Seeder default Endpoint
 app.post('/api/seed', async (req, res) => {
   await User.deleteMany({}); await Book.deleteMany({}); await Transaction.deleteMany({});
