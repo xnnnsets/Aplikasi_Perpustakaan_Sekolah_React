@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import toast from 'react-hot-toast';
+import api from '../services/api';
 
 export default function AdminDashboard() {
   const [pendings, setPendings] = useState([]);
@@ -19,61 +20,64 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchPendings = async () => {
-    const res = await axios.get('http://localhost:5000/api/transactions/pending');
-    setPendings(res.data);
+    try {
+      const res = await api.get('/transactions/pending');
+      setPendings(res.data);
+    } catch(err) { console.error(err); }
   };
 
   const fetchActives = async () => {
-    const res = await axios.get('http://localhost:5000/api/transactions/active');
-    setActives(res.data);
+    try {
+      const res = await api.get('/transactions/active');
+      setActives(res.data);
+    } catch(err) { console.error(err); }
   };
 
   const handleApproveBooking = async (id) => {
     try {
-      await axios.post('http://localhost:5000/api/transactions/approve-booking', { transactionId: id });
-      alert('Booking disetujui, buku diberikan ke murid.');
+      await api.post('/transactions/approve-booking', { transactionId: id });
+      toast.success('Booking disetujui, buku diberikan ke murid.');
       fetchPendings();
       fetchActives();
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+    } catch(err) { toast.error(err.response?.data?.message || 'Error'); }
   };
 
   const handleWalkIn = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/transactions/walk-in', {
+      await api.post('/transactions/walk-in', {
         nis: walkinNis,
         titleOrId: walkinBookId
       });
-      alert('Sirkulasi Walk-In Berhasil!');
+      toast.success('Sirkulasi Walk-In Berhasil!');
       fetchActives();
       setWalkinNis(''); setWalkinBookId('');
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+    } catch(err) { toast.error(err.response?.data?.message || 'Error'); }
   };
 
   const handleReturn = async (id) => {
     if(!window.confirm('Verifikasi fisik buku bagus? Konfirmasi pengembalian.')) return;
     try {
-      const res = await axios.post('http://localhost:5000/api/transactions/return', { transactionId: id });
-      alert(res.data.message);
+      const res = await api.post('/transactions/return', { transactionId: id });
+      toast.success(res.data.message);
       fetchActives();
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+    } catch(err) { toast.error(err.response?.data?.message || 'Error'); }
   };
 
   const handlePayFine = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:5000/api/users/pay-fine', {
+      const res = await api.post('/users/pay-fine', {
         nis: fineNis, amount: Number(fineAmount)
       });
-      alert('Denda dilunasi. Sisa Denda: Rp' + res.data.user.dendaAktif);
+      toast.success(`Denda dilunasi. Sisa Denda: Rp${res.data.user.dendaAktif}`);
       setFineNis(''); setFineAmount('');
-      fetchActives();
-    } catch(err) { alert(err.response?.data?.message || 'Error'); }
+      fetchActives(); // refresh just in case
+    } catch(err) { toast.error(err.response?.data?.message || 'Error'); }
   };
 
   return (
-    <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard Admin Perpustakaan</h1>
+    <div className="space-y-6">
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         

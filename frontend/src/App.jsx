@@ -1,26 +1,46 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+
 import Login from './pages/Login';
-import MuridDashboard from './pages/MuridDashboard';
+
+// Admin Pages
+import AdminLayout from './components/layouts/AdminLayout';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminBooks from './pages/AdminBooks';
+import AdminUsers from './pages/AdminUsers';
+import AdminHistory from './pages/AdminHistory';
+
+// Murid Pages
+import MuridLayout from './components/layouts/MuridLayout';
+import MuridDashboard from './pages/MuridDashboard';
+import MuridProfile from './pages/MuridProfile';
+
 import './index.css';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
-        <header className="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center">
-          <div className="container mx-auto font-bold text-xl">Sistem Informasi Perpustakaan Sekolah</div>
-          <button onClick={() => { localStorage.clear(); window.location.href = '/'}} className="text-sm bg-red-500 px-3 py-1 rounded hover:bg-red-600">Logout</button>
-        </header>
-        <main className="container mx-auto p-4">
-          <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/murid" element={<MuridDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
-        </main>
-      </div>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route path="/" element={<Login />} />
+        
+        {/* Admin Rounting */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="books" element={<AdminBooks />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="history" element={<AdminHistory />} />
+        </Route>
+
+        {/* Murid Routing */}
+        <Route path="/murid" element={<MuridLayout />}>
+          <Route index element={<MuridDashboard />} />
+          <Route path="profile" element={<MuridProfile />} />
+        </Route>
+
+      </Routes>
     </Router>
   );
 }
+
 export default App;
