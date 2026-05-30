@@ -49,7 +49,8 @@ export default function AdminBooks() {
       let finalCoverImage = formData.coverImage;
       const gdriveMatch = finalCoverImage?.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
       if (gdriveMatch) {
-        finalCoverImage = `https://drive.google.com/uc?export=view&id=${gdriveMatch[1]}`;
+        // Cara paling ampuh menembus blokir hotlink gdrive terbaru
+        finalCoverImage = `https://lh3.googleusercontent.com/d/${gdriveMatch[1]}`;
       }
       
       const payload = { ...formData, coverImage: finalCoverImage };
@@ -136,7 +137,7 @@ export default function AdminBooks() {
                 <tr key={b._id} className="border-b hover:bg-gray-50">
                   <td className="p-3">
                     {b.coverImage ? (
-                      <img src={b.coverImage} alt="Cover" className="w-12 h-16 object-cover rounded shadow shadow-sm" />
+                      <img src={b.coverImage} alt="Cover" referrerPolicy="no-referrer" className="w-12 h-16 object-cover rounded shadow shadow-sm bg-gray-100" />
                     ) : (
                       <div className="w-12 h-16 bg-gray-200 flex items-center justify-center rounded shadow-sm text-xs text-gray-400">No Img</div>
                     )}
