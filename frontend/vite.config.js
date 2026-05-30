@@ -8,4 +8,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    host: true, // Membuka akses jaringan lokal (LAN)
+    proxy: {
+      // Mengarahkan request /api dari frontend ke backend di komputer lokal
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      }
+    }
+  }
 })
