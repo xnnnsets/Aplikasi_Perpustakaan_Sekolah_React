@@ -1,54 +1,142 @@
-# Sistem Informasi Perpustakaan Sekolah (React + Express)
+# 📚 Aplikasi Sistem Informasi Perpustakaan Sekolah
 
-Aplikasi perpustakaan modern berbasis Web dengan arsitektur **MVC** (Model-View-Controller) untuk penggunaan internal sekolah. Memisahkan antarmuka klien (Frontend) dengan layanan logika (Backend) secara rapi untuk skalabilitas E2E.
+Sistem Manajemen Perpustakaan Sekolah berbasis Web yang dibangun menggunakan struktur arsitektur **MVC (Model-View-Controller)** pada backend dan **Component-Driven** pada frontend. Mendukung dua peran: **Admin (Pustakawan)** dan **Murid (Siswa)**.
 
-## 🔄 Alur Sistem Bisnis (Workflow)
-Sistem ini memfasilitasi 2 jalur utama peminjaman yang akhirnya akan divalidasi oleh petugas di perpustakaan:
-1. **Jalur A (Booking Web):** Murid memesan buku dari aplikasi web. Stok akan otomatis direvervasi (terkunci). Murid kemudian harus datang untuk mengambil fisik buku ke meja petugas.
-2. **Jalur B (Walk-In):** Murid langsung datang ke rak perpustakaan mencari buku, lalu membawanya ke meja petugas.
-3. **Validasi Terpusat:** Di meja petugas, NIS (Nomor Induk Siswa) akan dipindai/diinput. **Gatekeeping Logic**: Jika murid tersebut memiliki tunggakan denda atau kuota pinjam sudah penuh (maksimal 3 transaksi berjalan), sistem akan otomatis memblokir sirkulasi baru.
-4. **Sirkulasi Denda Otomatis:** Sistem mendeteksi tanggal pengembalian (*default* 7 hari). Apabila murid terlambat mengembalikan buku, pada saat proses "Terima Kembali" oleh Admin, sistem otomatis mengalkulasi denda (Rp1.000/hari keterlambatan) yang akan dibebankan ke dalam status hutang siswa.
+## 🚀 Fitur Utama
+- **Autentikasi Multi-Role**: Login khusus membedakan sesi untuk `admin` dan `murid`.
+- **Manajemen Buku (CRUD)**: Pustakawan dapat menambah, mengedit, dan menghapus stok buku.
+- **Dukungan Cover Buku Kekinian**: Admin dapat mengunggah gambar langsung dari komputer lokal atau menempel (*paste*) Link Google Drive (otomatis dikonversi ke format *direct link* untuk menembus proteksi CORS Google).
+- **Sistem Booking & Peminjaman**: Murid dapat melakukan booking (pemesanan) buku dengan metode *Walk-in* harian.
+- **Desain UI Modern & Responsif**: Menggunakan React 19 + Tailwind CSS v4 terbaru dengan gaya tampilan *Card Grid* di antarmuka Siswa.
 
-## 🚀 Teknologi Utama
-- **Frontend:** React, Vite, Tailwind CSS, React Router, Axios, React Hot Toast
-- **Backend:** Node.js, Express, Mongoose (MongoDB)
+---
 
-## 💻 Cara Menjalankan untuk Uji Coba & Testing Lokal
+## 📂 Struktur Folder
+Aplikasi ini dikembangkan dalam bentuk *monorepo* yang berisi dua entitas utama terpisah. Konsep perpaduan spesifiknya tertulis di bawah ini:
 
-Dibutuhkan Node.js dan MongoDB (lokal atau cloud) yang aktif.
+```text
+Aplikasi_Perpustakaan_Sekolah_React/
+├── backend/                 # API Server (Node.js & Express)
+│   ├── config/              # Konfigurasi Koneksi Database (MongoDB)
+│   ├── controllers/         # Logika Utama / Pengolah request (MVC - Controller)
+│   ├── models/              # Schema Database Mongoose (MVC - Model)
+│   ├── routes/              # Routing URL API untuk mapping ke Controller
+│   ├── uploads/             # Folder penyimpan gambar static hasil upload lokal
+│   └── server.js            # Entry point backend
+│
+└── frontend/                # Client UI (React, Vite & Tailwind v4)
+    ├── src/
+    │   ├── components/      # Komponen Modular & Layout (Sidebar Admin & Murid)
+    │   ├── pages/           # Halaman Utama (Dashboard, Login, Kelola Buku)
+    │   ├── services/        # Konfigurasi Axios & interaksi ke API Backend
+    │   ├── App.jsx          # Setup React Router DOM bersarang (Nested Route)
+    │   └── main.jsx         # Entry point integrasi frontend
+    ├── vite.config.js       # Konfigurasi Vite & Konfigurasi Proxy Network (LAN)
+    └── index.css            # File direktif utama milik Tailwind CSS v4
+```
 
-1. **Setup Dependencies:**
-   Jalankan ini dari direktori *root*:
+---
+
+## 🗄️ Flow Data & Skema Database (MongoDB)
+
+Aplikasi memakai pendekatan Node/Express REST API. 
+*Flow kerjanya*: Frontend merequest lewat `axios` (`/api/...`) dan diterima oleh `Routes` Backend -> Diteruskan secara logic ke `Controller` -> Menulis atau mengambil dari `Models` (Mongoose) -> Kembali ke Frontend sebagai JSON Response.
+
+Aplikasi menggunakan 3 Schema utama:
+1. **Koleksi `User`**: Atribut => `nis` (sebagai userID/username), `name`, `password` (untuk diproses auth), `role` (mendefinisikan `admin` atau `murid`).
+2. **Koleksi `Book`**: Atribut => `title`, `author`, `stock`, `coverImage` (Bisa menampung link URL GDrive `https://lh3...` / url lokal server `/uploads/...`).
+3. **Koleksi `Transaction`**: Menghubungkan ID `User` dan ID `Book` dalam logika peminjaman, serta status (`dipinjam`, `kembali`, `booking`).
+
+---
+
+## 🛠️ Panduan Instalasi & Deploy Lokal
+
+### Syarat Wajib Sistem (Prerequisites)
+Pastikan PC/Server Anda telah terinstall program berikut:
+- **Node.js** (v18 atau yang lebih baru direkomendasikan)
+- **Git** (Untuk memproses kloning kode base)
+- **MongoDB Server** (Untuk database lokal, silakan abaikan jika menggunakan URI MongoDB Cloud/Atlas)
+
+---
+
+### A. Panduan Pengaktifan MongoDB (OS Spesifik)
+
+#### 🪟 Lingkungan Windows 10/11:
+1. Unduh file MSI [MongoDB Community Server](https://www.mongodb.com/try/download/community).
+2. Lakukan instalasi metode *Complete*. Pastikan Anda tidak menghapus centang pada *"Install MongoDB as a Service"*.
+3. Setelah instalasi selesai, MongoDB otomatis hidup (*running*) di *background* pada porta **27017**.
+
+#### 🐧 Lingkungan Linux (Ubuntu / Debian / Linux Mint):
+1. Lakukan instalasi dependensi MongoDB melalui terminal menggunakan sistem manajer paket `apt`:
    ```bash
-   cd backend && npm install
-   cd ../frontend && npm install
+   sudo apt update
+   sudo apt install -y mongodb
+   # Atau jika menggunakan dependensi resmi source terbaru (mongodb-org) dapat mengikuti panduannya di web spesifik mongodba.
    ```
-2. **Konfigurasi Environment:**
-   - Duplikasi file `.env.example` ke `.env` di folder `backend`. Pastikan `MONGO_URI` mengarah ke database Anda.
-   - Duplikasi file `.env.example` ke `.env` di folder `frontend`. Pastikan `VITE_API_URL` mengarah ke localhost backend.
-3. **Mulai Layanan:**
-   - **Backend:** Buka terminal ke-1, jalankan `cd backend && npm start` (Akan berjalan di http://localhost:5000)
-   - **Frontend:** Buka terminal ke-2, jalankan `cd frontend && npm run dev` (Akan berjalan di http://localhost:5173)
-4. **Seeding Data Otomatis:**
-   Buka terminal khusus (baru) kemudian tembak endpoint berikut, maka database perpustakaan akan langsung terisi *dummy data*:
+2. Pastikan service mongod sudah aktif (*Start* & *Enable*) di Background:
    ```bash
-   curl -X POST http://localhost:5000/api/seed
+   sudo systemctl start mongod
+   sudo systemctl enable mongod
+   sudo systemctl status mongod
    ```
-   *Anda dapat langsung login menggunakan:*
-   - **Sebagai Murid:** NIS: `1001` , Password: `password`
-   - **Sebagai Admin:** NIS/ID: `admin` , Password: `admin`
 
-## 🌐 Cara Deploy (Production)
-Untuk membawa proyek ini ke *Production* (Internet Publik), ikuti 3 langkah berikut:
-1. **Database:** Gunakan layanan seperti **MongoDB Atlas**. Buat cluster, ambil *Connection String* untuk disisipkan.
-2. **Backend (Render / Railway / VPS):**
-   * Hubungkan repository ke layanan hosting Backend.
-   * *Root Directory*: `/backend`
-   * *Build / Start Command*: `npm install` dan `npm start`
-   * Masukkan Environment Variables: `MONGO_URI` (dari Atlas) dan port yang sesuai.
-3. **Frontend (Vercel / Netlify):**
-   * Hubungkan repository ke layanan hosting Frontend.
-   * *Root Directory*: `/frontend`
-   * *Build Command*: `npm run build`
-   * *Output Dir*: `dist`
-   * Tambahkan Environment Variable: `VITE_API_URL` dengan rute publik URL backend Anda (Misal: `https://backend-perpus.onrender.com/api`).
+---
+
+### B. Tahap *Build* & Menjalankan Aplikasi
+
+1️⃣ **Clone & Buka Folder Repository**
+```bash
+git clone <URL_REPO_ANDA>
+cd Aplikasi_Perpustakaan_Sekolah_React
+```
+
+2️⃣ **Setup Environment Backend**
+```bash
+cd backend
+npm install
+```
+Buat file bernama `.env` di dalam folder `backend/` berisikan script berikut:
+```env
+PORT=5000
+DB_TYPE=MONGODB
+# Jika Local:
+MONGO_URI=mongodb://127.0.0.1:27017/perpus_sekolah
+# Jika MongoDB Cloud: mongodb+srv://<user>:<password>@cluster...
+```
+
+3️⃣ **Hidupkan Backend & Taburkan Data Awalan (Seeding)**
+```bash
+# Menghidupkan Server Backend
+npm run dev
+
+# Di terminal *BARU*/TAB LAIN, jalankan command dibawah ini
+# Ini bertujuan untuk men-generate Akun Admin, Murid dan Dua Buku contoh awal di Database
+curl -X POST http://localhost:5000/api/seed
+```
+*Pastikan Backend menuntaskan teks pesannya: `"Server jalan di http://localhost:5000"`.*
+
+4️⃣ **Setup Environment Frontend**
+Buka terminal baru di *root* repository Anda:
+```bash
+cd frontend
+npm install
+```
+Sama seperti backend, buat file bernama `.env` di dalam folder `frontend/` memuat kode pengarah *(reverse proxy)*:
+```env
+# Meredirect logic agar cocok digunakan baik di IP Komputer Lokal maupun via Jaringan WiFi ke HP
+VITE_API_URL=/api
+```
+Jalankan dev-server Vite:
+```bash
+npm run dev
+```
+
+5️⃣ **Akses Sistem (Uji Coba Browser)**
+- Buka terminal hasil `npm run dev` pada *frontend*.
+- Aplikasi dapat diakses lewat internet atau peramban Chrome/Edge Anda di tautan:
+  `http://localhost:5173`
+- Anda juga bisa membuka alamat URL `http://192.168.x.x:5173` (*Network IP*) pada Smartphone/Tablet yang terkoneksi pada Wi-Fi yang sama untuk merasakan *Responsive Mobile Mode*.
+
+✅ **Detail Akun Default dari Seeding Utama:**
+*   🦸‍♂️ **Admin ID:** `admin` | Password: `admin`
+*   👦 **Murid ID:** `1001` atau `1002` | Password: `password`
