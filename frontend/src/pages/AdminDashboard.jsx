@@ -14,6 +14,12 @@ export default function AdminDashboard() {
   const [fineNis, setFineNis] = useState('');
   const [fineAmount, setFineAmount] = useState('');
 
+  // States for Admin Profile Update
+  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentAdminNis = userData.nis || 'admin';
+  const [newNis, setNewNis] = useState(currentAdminNis);
+  const [newPassword, setNewPassword] = useState('');
+
   useEffect(() => {
     fetchPendings();
     fetchActives();
@@ -74,6 +80,28 @@ export default function AdminDashboard() {
       setFineNis(''); setFineAmount('');
       fetchActives(); // refresh just in case
     } catch(err) { toast.error(err.response?.data?.message || 'Error'); }
+  };
+
+  // Logika untuk Update Profile Admin
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await api.put('/admin/update-profile', {
+        currentNis: currentAdminNis,
+        newNis: newNis,
+        newPassword: newPassword
+      });
+      
+      toast.success(res.data.message);
+      
+      // Logout otomatis setelah berhasil
+      setTimeout(() => {
+        localStorage.clear();
+        window.location.href = '/';
+      }, 2000);
+    } catch(err) { 
+      toast.error(err.response?.data?.message || 'Gagal memperbarui profil.'); 
+    }
   };
 
   return (
@@ -159,6 +187,36 @@ export default function AdminDashboard() {
               <input type="number" className="w-full border p-2 rounded" value={fineAmount} onChange={e=>setFineAmount(e.target.value)} required/>
             </div>
             <button className="bg-green-600 text-white px-6 py-2 rounded h-[42px]">Bayar Lunas</button>
+          </form>
+        </div>
+
+        {/* PANEL 5: PENGATURAN AKUN ADMIN */}
+        <div className="bg-white p-6 rounded shadow border-t-4 border-purple-500 lg:col-span-2">
+          <h2 className="font-bold text-lg mb-4">Pengaturan Akun Admin</h2>
+          <form onSubmit={handleUpdateProfile} className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm mb-1">Username / NIS Admin</label>
+              <input 
+                type="text" 
+                className="w-full border p-2 rounded outline-none focus:ring focus:ring-purple-200" 
+                value={newNis} 
+                onChange={e => setNewNis(e.target.value)} 
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm mb-1">Password Baru</label>
+              <input 
+                type="password" 
+                placeholder="Kosongkan jika tidak ingin mengubah sandi"
+                className="w-full border p-2 rounded outline-none focus:ring focus:ring-purple-200" 
+                value={newPassword} 
+                onChange={e => setNewPassword(e.target.value)} 
+              />
+            </div>
+            <button type="submit" className="bg-purple-600 text-white px-6 py-2 rounded h-[42px] hover:bg-purple-700 transition">
+              Simpan & Logout
+            </button>
           </form>
         </div>
 
