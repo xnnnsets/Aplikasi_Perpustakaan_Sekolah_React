@@ -1,12 +1,14 @@
 import express from 'express';
-import { bookWeb, getPendings, getActives, getUserHistory, getAllHistory, approveBooking, walkInBorrow, returnBook } from '../controllers/transactionController.js';
+import { bookWeb, getPendings, getRejected, getActives, getUserHistory, getAllHistory, approveBooking, rejectBooking, walkInBorrow, returnBook } from '../controllers/transactionController.js';
 const router = express.Router();
 router.post('/book', bookWeb);
 router.get('/pending', getPendings);
+router.get('/rejected', getRejected);
 router.get('/active', getActives);
 router.get('/user/:userId', getUserHistory);
 router.get('/', getAllHistory);
 router.post('/approve-booking', approveBooking);
+router.post('/reject-booking', rejectBooking);
 router.post('/walk-in', walkInBorrow);
 router.post('/return', returnBook);
 export default router;

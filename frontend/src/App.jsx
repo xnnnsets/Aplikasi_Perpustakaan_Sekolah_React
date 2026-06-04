@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Login from './pages/Login';
@@ -17,8 +17,23 @@ import AdminFines from './pages/AdminFines';
 import MuridLayout from './components/layouts/MuridLayout';
 import MuridDashboard from './pages/MuridDashboard';
 import MuridProfile from './pages/MuridProfile';
+import { getCurrentUser } from './services/auth';
 
 import './index.css';
+
+function RequireRole({ allowedRoles }) {
+  const currentUser = getCurrentUser();
+
+  if (!currentUser) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (!allowedRoles.includes(currentUser.role)) {
+    return <Navigate to={currentUser.role === 'admin' ? '/admin' : '/murid'} replace />;
+  }
+
+  return <Outlet />;
+}
 
 function App() {
   return (
@@ -28,20 +43,24 @@ function App() {
         <Route path="/" element={<Login />} />
         
         {/* Admin Rounting */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="walk-in" element={<AdminWalkIn />} />
-          <Route path="fines" element={<AdminFines />} />
-          <Route path="books" element={<AdminBooks />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="history" element={<AdminHistory />} />
-          <Route path="settings" element={<AdminSettings />} />
+        <Route element={<RequireRole allowedRoles={['admin']} />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="walk-in" element={<AdminWalkIn />} />
+            <Route path="fines" element={<AdminFines />} />
+            <Route path="books" element={<AdminBooks />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="history" element={<AdminHistory />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
         </Route>
 
         {/* Murid Routing */}
-        <Route path="/murid" element={<MuridLayout />}>
-          <Route index element={<MuridDashboard />} />
-          <Route path="profile" element={<MuridProfile />} />
+        <Route element={<RequireRole allowedRoles={['murid']} />}>
+          <Route path="/murid" element={<MuridLayout />}>
+            <Route index element={<MuridDashboard />} />
+            <Route path="profile" element={<MuridProfile />} />
+          </Route>
         </Route>
 
       </Routes>

@@ -9,6 +9,7 @@ const TransactionSchema = new mongoose.Schema({
   tanggalPinjam: Date,
   tanggalJatuhTempo: Date,
   tanggalKembali: Date,
+  alasanDitolak: { type: String, default: '' },
   denda: { type: Number, default: 0 }
 });
 export default mongoose.model('Transaction', TransactionSchema);

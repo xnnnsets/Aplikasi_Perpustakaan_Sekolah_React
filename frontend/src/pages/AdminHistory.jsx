@@ -34,6 +34,7 @@ export default function AdminHistory() {
       case 'pending': return 'bg-amber-50 text-amber-700 ring-1 ring-amber-200';
       case 'dipinjam': return 'bg-blue-50 text-blue-700 ring-1 ring-blue-200';
       case 'kembali': return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200';
+      case 'ditolak': return 'bg-rose-50 text-rose-700 ring-1 ring-rose-200';
       default: return 'bg-slate-100 text-slate-600';
     }
   };
@@ -80,6 +81,7 @@ export default function AdminHistory() {
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Buku</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Jalur</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Catatan</th>
                   <th className="text-right px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Denda</th>
                 </tr>
               </thead>
@@ -102,6 +104,15 @@ export default function AdminHistory() {
                         {h.status}
                       </span>
                     </td>
+                    <td className="px-5 py-3 text-xs text-slate-500 max-w-xs">
+                      {h.status === 'ditolak' ? (
+                        <span className="inline-flex px-2 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-100">
+                          {h.alasanDitolak || 'Tidak ada alasan tertulis'}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </td>
                     <td className="px-5 py-3 text-right">
                       {h.denda > 0 ? (
                         <span className="text-rose-600 font-semibold text-xs">Rp {h.denda.toLocaleString('id-ID')}</span>
@@ -113,7 +124,7 @@ export default function AdminHistory() {
                 ))}
                 {filteredHistory.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-5 py-12 text-center">
+                    <td colSpan="7" className="px-5 py-12 text-center">
                       <FileText size={32} className="mx-auto text-slate-300 mb-2" />
                       <p className="text-sm text-slate-400">Tidak ada riwayat ditemukan.</p>
                     </td>

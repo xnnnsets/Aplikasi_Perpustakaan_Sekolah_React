@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { User, BookOpen, CreditCard, Shield, Clock } from 'lucide-react';
 import api from '../services/api';
+import { getCurrentUser } from '../services/auth';
 
 export default function MuridProfile() {
   const [history, setHistory] = useState([]);
   const [userProfile, setUserProfile] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const localUser = JSON.parse(localStorage.getItem('user'));
+  const localUser = getCurrentUser();
 
   useEffect(() => {
     if (!localUser) return;
@@ -90,6 +91,7 @@ export default function MuridProfile() {
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Tgl Pinjam</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Tgl Kembali</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Catatan</th>
                   <th className="text-right px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Denda</th>
                 </tr>
               </thead>
@@ -112,6 +114,15 @@ export default function MuridProfile() {
                     </td>
                     <td className="px-5 py-3 text-slate-500 text-xs">{h.tanggalPinjam ? new Date(h.tanggalPinjam).toLocaleDateString('id-ID') : '-'}</td>
                     <td className="px-5 py-3 text-slate-500 text-xs">{h.tanggalKembali ? new Date(h.tanggalKembali).toLocaleDateString('id-ID') : '-'}</td>
+                    <td className="px-5 py-3 text-slate-500 text-xs max-w-xs">
+                      {h.status === 'ditolak' ? (
+                        <span className="inline-flex px-2 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-100">
+                          {h.alasanDitolak || 'Tidak ada alasan tertulis'}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </td>
                     <td className="px-5 py-3 text-right">
                       {h.denda > 0 ? (
                         <span className="text-rose-600 font-semibold text-xs">Rp {h.denda.toLocaleString('id-ID')}</span>
@@ -123,7 +134,7 @@ export default function MuridProfile() {
                 ))}
                 {history.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-5 py-12 text-center">
+                    <td colSpan="7" className="px-5 py-12 text-center">
                       <BookOpen size={32} className="mx-auto text-slate-300 mb-2" />
                       <p className="text-sm text-slate-400">Belum ada riwayat peminjaman.</p>
                     </td>

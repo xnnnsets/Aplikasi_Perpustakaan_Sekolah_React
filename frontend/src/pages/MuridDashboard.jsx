@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Search, BookOpen, ShieldAlert, Calendar, X, Phone } from 'lucide-react';
 import api from '../services/api';
+import { getCurrentUser } from '../services/auth';
 
 export default function MuridDashboard() {
   const [books, setBooks] = useState([]);
@@ -17,7 +18,7 @@ export default function MuridDashboard() {
   const [tanggalKembali, setTanggalKembali] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getCurrentUser();
 
   useEffect(() => {
     if (!user) return;

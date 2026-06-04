@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { BookOpen, Eye, EyeOff, LogIn, User } from 'lucide-react';
 import api from '../services/api';
+import { setCurrentUser } from '../services/auth';
 
 export default function Login() {
   const [nis, setNis] = useState('');
@@ -16,7 +17,7 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await api.post('/login', { nis, password });
-      localStorage.setItem('user', JSON.stringify(res.data));
+      setCurrentUser(res.data);
 
       toast.success('Login berhasil!');
       if (res.data.role === 'admin') {

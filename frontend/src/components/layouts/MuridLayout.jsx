@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Home, User, LogOut, Menu, X, BookOpen } from 'lucide-react';
+import { clearCurrentUser, getCurrentUser } from '../../services/auth';
 
 export default function MuridLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const userData = getCurrentUser() || {};
 
   const handleLogout = () => {
-    localStorage.clear();
+    clearCurrentUser();
     navigate('/');
   };
 

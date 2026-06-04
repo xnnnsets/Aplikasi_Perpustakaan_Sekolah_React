@@ -100,6 +100,7 @@ export const bookWeb = async (req, res) => {
 };
 
 export const getPendings = async (req, res) => res.json(await Transaction.find({ status: 'pending' }).populate('user book'));
+export const getRejected = async (req, res) => res.json(await Transaction.find({ status: 'ditolak' }).populate('user book'));
 export const getActives = async (req, res) => res.json(await Transaction.find({ status: 'dipinjam' }).populate('user book'));
 export const getUserHistory = async (req, res) => res.json(await Transaction.find({ user: req.params.userId }).populate('book'));
 export const getAllHistory = async (req, res) => res.json(await Transaction.find().populate('user book').sort({ _id: -1 }));
@@ -116,6 +117,35 @@ export const approveBooking = async (req, res) => {
   }
   await trx.save();
   res.json({ message: 'Booking disetujui', transaction: trx });
+};
+
+export const rejectBooking = async (req, res) => {
+  try {
+    const { transactionId, alasanDitolak } = req.body;
+    if (!alasanDitolak || !alasanDitolak.trim()) {
+      return res.status(400).json({ message: 'Alasan penolakan wajib diisi.' });
+    }
+
+    const trx = await Transaction.findById(transactionId).populate('book user');
+    if (!trx) return res.status(404).json({ message: 'Trx tdk ada' });
+    if (trx.status !== 'pending') {
+      return res.status(400).json({ message: 'Hanya booking pending yang bisa ditolak.' });
+    }
+
+    trx.status = 'ditolak';
+    trx.alasanDitolak = alasanDitolak.trim();
+    await trx.save();
+
+    const bookId = trx.book?._id || trx.book;
+    if (bookId) {
+      await Book.findByIdAndUpdate(bookId, { $inc: { stock: 1 } });
+    }
+
+    res.json({ message: 'Booking ditolak.', transaction: trx });
+  } catch (err) {
+    console.error('rejectBooking error:', err);
+    res.status(500).json({ message: 'Gagal menolak booking. Silakan coba lagi.' });
+  }
 };
 
 export const walkInBorrow = async (req, res) => {

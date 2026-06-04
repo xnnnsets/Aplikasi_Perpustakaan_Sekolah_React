@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Book, Users, History, LogOut, Menu, X, BookOpen, Settings, ArrowRightLeft, Wallet } from 'lucide-react';
+import { clearCurrentUser, getCurrentUser } from '../../services/auth';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const userData = JSON.parse(localStorage.getItem('user') || '{}');
+  const userData = getCurrentUser() || {};
 
   const handleLogout = () => {
-    localStorage.clear();
+    clearCurrentUser();
     navigate('/');
   };
 
