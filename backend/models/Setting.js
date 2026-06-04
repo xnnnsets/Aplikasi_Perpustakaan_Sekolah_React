@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const SettingSchema = new mongoose.Schema({
   dendaPerHari: { type: Number, default: 1000 },
+  limitPeminjamanGlobal: { type: Number, default: 3 },
   jamBuka: { type: String, default: '07:00' },
   jamTutup: { type: String, default: '15:00' },
   hariOperasional: { type: [String], default: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] },

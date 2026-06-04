@@ -6,6 +6,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['murid', 'admin'], default: 'murid' },
   dendaAktif: { type: Number, default: 0 },
+  limitPeminjaman: { type: Number, default: null },
   statusPeminjaman: { type: String, enum: ['aktif', 'disanksi'], default: 'aktif' }
 });
 export default mongoose.model('User', UserSchema);

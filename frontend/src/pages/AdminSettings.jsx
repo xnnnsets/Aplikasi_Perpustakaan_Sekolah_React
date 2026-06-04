@@ -8,6 +8,7 @@ const HARI_OPTIONS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Min
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
     dendaPerHari: 1000,
+    limitPeminjamanGlobal: 3,
     jamBuka: '07:00',
     jamTutup: '15:00',
     hariOperasional: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'],
@@ -45,6 +46,7 @@ export default function AdminSettings() {
     try {
       await api.put('/settings', {
         dendaPerHari: Number(settings.dendaPerHari),
+        limitPeminjamanGlobal: Number(settings.limitPeminjamanGlobal),
         jamBuka: settings.jamBuka,
         jamTutup: settings.jamTutup,
         hariOperasional: settings.hariOperasional,
@@ -95,6 +97,32 @@ export default function AdminSettings() {
                 value={settings.dendaPerHari}
                 onChange={e => setSettings({ ...settings, dendaPerHari: e.target.value })}
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Limit Peminjaman */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+              <Settings size={16} className="text-indigo-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-800 text-sm">Batas Peminjaman Global</h3>
+              <p className="text-[11px] text-slate-400">Berlaku untuk semua murid kecuali jika murid punya batas khusus</p>
+            </div>
+          </div>
+          <div className="p-5">
+            <div className="max-w-xs">
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Maksimal Buku Aktif</label>
+              <input
+                type="number"
+                min="0"
+                className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                value={settings.limitPeminjamanGlobal}
+                onChange={e => setSettings({ ...settings, limitPeminjamanGlobal: e.target.value })}
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Isi 0 jika ingin menonaktifkan limit global.</p>
             </div>
           </div>
         </div>

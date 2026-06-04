@@ -1,8 +1,14 @@
 import User from '../models/User.js';
 
+const normalizeLoanLimit = (value) => {
+  if (value === '' || value === undefined || value === null) return null;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : null;
+};
+
 export const getUsers = async (req, res) => res.json(await User.find({ role: 'murid' }));
-export const createUser = async (req, res) => { try { res.json(await User.create({...req.body, role:'murid'})); } catch(err) { res.status(400).json({message: 'Gagal menambah murid / duplikat'}); } };
-export const updateUser = async (req, res) => { try { res.json(await User.findByIdAndUpdate(req.params.id, req.body, {new: true})); } catch(err) { res.status(400).json({message: 'Gagal mengubah'}); } };
+export const createUser = async (req, res) => { try { res.json(await User.create({ ...req.body, role: 'murid', limitPeminjaman: normalizeLoanLimit(req.body.limitPeminjaman) })); } catch(err) { res.status(400).json({message: 'Gagal menambah murid / duplikat'}); } };
+export const updateUser = async (req, res) => { try { res.json(await User.findByIdAndUpdate(req.params.id, { ...req.body, limitPeminjaman: normalizeLoanLimit(req.body.limitPeminjaman) }, {new: true})); } catch(err) { res.status(400).json({message: 'Gagal mengubah'}); } };
 export const deleteUser = async (req, res) => { try { await User.findByIdAndDelete(req.params.id); res.json({message: 'Terhapus'}); } catch(err) { res.status(400).json({message:'Gagal hapus'}); } };
 
 export const payFine = async (req, res) => {

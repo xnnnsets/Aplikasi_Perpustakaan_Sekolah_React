@@ -6,7 +6,7 @@ import api from '../services/api';
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ nis: '', name: '', password: '' });
+  const [formData, setFormData] = useState({ nis: '', name: '', password: '', limitPeminjaman: '' });
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function AdminUsers() {
         await api.post('/users', formData);
         toast.success('Murid berhasil ditambahkan!');
       }
-      setFormData({ nis: '', name: '', password: '' });
+      setFormData({ nis: '', name: '', password: '', limitPeminjaman: '' });
       setEditId(null);
       fetchUsers();
     } catch (err) {
@@ -55,12 +55,12 @@ export default function AdminUsers() {
 
   const handleEdit = (user) => {
     setEditId(user._id);
-    setFormData({ nis: user.nis, name: user.name, password: user.password });
+    setFormData({ nis: user.nis, name: user.name, password: user.password, limitPeminjaman: user.limitPeminjaman ?? '' });
   };
 
   const cancelEdit = () => {
     setEditId(null);
-    setFormData({ nis: '', name: '', password: '' });
+    setFormData({ nis: '', name: '', password: '', limitPeminjaman: '' });
   };
 
   const handleToggleSanksi = async (user) => {
@@ -97,7 +97,7 @@ export default function AdminUsers() {
           )}
         </div>
         <form onSubmit={handleSubmit} className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1.5">NIS</label>
               <input required type="text" className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" value={formData.nis} onChange={e => setFormData({ ...formData, nis: e.target.value })} disabled={!!editId} placeholder="Nomor Induk Siswa" />
@@ -109,6 +109,18 @@ export default function AdminUsers() {
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1.5">Password</label>
               <input required type="text" className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} placeholder="Password akun" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1.5">Batas Pinjaman Khusus</label>
+              <input
+                type="number"
+                min="0"
+                className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                value={formData.limitPeminjaman}
+                onChange={e => setFormData({ ...formData, limitPeminjaman: e.target.value })}
+                placeholder="Kosongkan ikut global"
+              />
+              <p className="text-[11px] text-slate-400 mt-1">Isi 0 untuk tanpa limit khusus, atau kosongkan agar ikut global.</p>
             </div>
           </div>
           <div className="flex gap-2 mt-4">
@@ -143,6 +155,7 @@ export default function AdminUsers() {
                 <tr className="border-b border-slate-100">
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">NIS</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Nama</th>
+                  <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Limit</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Password</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
                   <th className="text-left px-5 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Denda</th>
@@ -162,6 +175,11 @@ export default function AdminUsers() {
                         </div>
                         <span className="font-medium text-slate-700">{u.name}</span>
                       </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-md ${u.limitPeminjaman === null || u.limitPeminjaman === undefined ? 'bg-slate-100 text-slate-500' : 'bg-indigo-50 text-indigo-600'}`}>
+                        {u.limitPeminjaman === null || u.limitPeminjaman === undefined ? 'Ikut Global' : `${u.limitPeminjaman} buku`}
+                      </span>
                     </td>
                     <td className="px-5 py-3 text-slate-400 text-xs">{u.password}</td>
                     <td className="px-5 py-3">
@@ -204,7 +222,7 @@ export default function AdminUsers() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-5 py-12 text-center text-slate-400 text-sm">Belum ada murid terdaftar.</td>
+                    <td colSpan="7" className="px-5 py-12 text-center text-slate-400 text-sm">Belum ada murid terdaftar.</td>
                   </tr>
                 )}
               </tbody>

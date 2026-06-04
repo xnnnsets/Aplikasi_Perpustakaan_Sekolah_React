@@ -9,13 +9,24 @@ export default function AdminWalkIn() {
   const [books, setBooks] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [tanggalPinjam, setTanggalPinjam] = useState('');
+  const [tanggalKembali, setTanggalKembali] = useState('');
   const [queue, setQueue] = useState([]);
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState([]);
 
   useEffect(() => {
     fetchData();
+    resetDates();
   }, []);
+
+  const resetDates = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const due = new Date();
+    due.setDate(due.getDate() + 7);
+    setTanggalPinjam(today);
+    setTanggalKembali(due.toISOString().split('T')[0]);
+  };
 
   const fetchData = async () => {
     try {
@@ -35,12 +46,20 @@ export default function AdminWalkIn() {
       toast.error('Pilih murid dan buku terlebih dahulu');
       return;
     }
+    if (!tanggalPinjam || !tanggalKembali) {
+      toast.error('Pilih tanggal pinjam dan tanggal kembali terlebih dahulu');
+      return;
+    }
+    if (new Date(tanggalKembali) <= new Date(tanggalPinjam)) {
+      toast.error('Tanggal kembali harus setelah tanggal pinjam');
+      return;
+    }
     const exists = queue.some(q => q.user._id === selectedUser._id && q.book._id === selectedBook._id);
     if (exists) {
       toast.error('Kombinasi murid & buku ini sudah ada di antrian');
       return;
     }
-    setQueue(prev => [...prev, { id: Date.now(), user: selectedUser, book: selectedBook }]);
+    setQueue(prev => [...prev, { id: Date.now(), user: selectedUser, book: selectedBook, tanggalPinjam, tanggalKembali }]);
     setSelectedUser(null);
     setSelectedBook(null);
     toast.success('Ditambahkan ke antrian');
@@ -60,7 +79,9 @@ export default function AdminWalkIn() {
       try {
         await api.post('/transactions/walk-in', {
           nis: item.user.nis,
-          titleOrId: item.book._id
+          titleOrId: item.book._id,
+          tanggalPinjam: item.tanggalPinjam,
+          tanggalKembali: item.tanggalKembali
         });
         newResults.push({ ...item, success: true, message: 'Berhasil' });
       } catch (err) {
@@ -160,6 +181,29 @@ export default function AdminWalkIn() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Tanggal Pinjam</label>
+                  <input
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    value={tanggalPinjam}
+                    onChange={e => setTanggalPinjam(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1.5">Tanggal Kembali</label>
+                  <input
+                    type="date"
+                    min={tanggalPinjam || new Date().toISOString().split('T')[0]}
+                    className="w-full border border-slate-200 px-3 py-2 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    value={tanggalKembali}
+                    onChange={e => setTanggalKembali(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={addToQueue}
@@ -224,6 +268,7 @@ export default function AdminWalkIn() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-slate-700 truncate">{item.user.name} <span className="text-slate-400 font-normal">({item.user.nis})</span></p>
                     <p className="text-xs text-slate-400 truncate">{item.book.title}</p>
+                        <p className="text-[11px] text-slate-400">{item.tanggalPinjam} → {item.tanggalKembali}</p>
                   </div>
                   <button onClick={() => removeFromQueue(item.id)} className="p-1.5 rounded-lg hover:bg-rose-50 text-rose-400 hover:text-rose-600 transition-colors shrink-0">
                     <Trash2 size={14} />
